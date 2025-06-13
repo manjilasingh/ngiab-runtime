@@ -45,12 +45,19 @@ IMAGE_NAME="awiciroh/ciroh-ngen-image:latest"
 echo "Pulling latest Docker image: $IMAGE_NAME"
 docker pull $IMAGE_NAME
 
+
+# Get the number of available CPU cores
+NUM_CORES=$(nproc)
+echo "Number of available CPU cores: $NUM_CORES"
+
 echo "Running NextGen model in $RUN_MODE mode..."
 echo "=== Running NGIAB (NextGen) with Docker ==="
 start_ngen=$(date +%s)
 if [ "$RUN_MODE" = "parallel" ]; then
-    docker run --rm -v "$HOST_DATA_PATH:/ngen/ngen/data" "$IMAGE_NAME" /ngen/ngen/data auto 4
+    echo "Running in parallel mode with $NUM_CORES processes"
+    docker run --rm -v "$HOST_DATA_PATH:/ngen/ngen/data" "$IMAGE_NAME" /ngen/ngen/data auto $NUM_CORES
 else
+    echo "Running in serial mode"
     docker run --rm -v "$HOST_DATA_PATH:/ngen/ngen/data" "$IMAGE_NAME" /ngen/ngen/data auto 1
 fi
 end_ngen=$(date +%s)
@@ -83,6 +90,9 @@ echo "  Gage ID:    $GAGE_ID"
 echo "  Start Date: $START_DATE"
 echo "  End Date:   $END_DATE"
 echo "  Run Mode:   $RUN_MODE"
+if [ "$RUN_MODE" = "parallel" ]; then
+    echo "  Processes:  $NUM_CORES"
+fi
 echo ""
 echo "Timing Results:"
 echo "Data Preprocess Time: $preprocess_time seconds"
